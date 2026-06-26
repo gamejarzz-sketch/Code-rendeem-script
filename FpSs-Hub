@@ -1,0 +1,274 @@
+-- ============================
+--    FPSs Hub - ProxyLib
+--    Key: FPSS1-98qWa66F
+-- ============================
+
+local VALID_KEY  = "FPSS1-98qWa66F"
+local KEY_FILE   = "FPSsHub_key.txt"
+
+local Players     = game:GetService("Players")
+local RunService  = game:GetService("RunService")
+local Lighting    = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local Workspace   = game:GetService("Workspace")
+local Stats       = game:GetService("Stats")
+local CoreGui     = game:GetService("CoreGui")
+
+local function SaveKey(k) pcall(function() writefile(KEY_FILE, k) end) end
+local function LoadKey()
+    local ok, v = pcall(function() return isfile(KEY_FILE) and readfile(KEY_FILE) or "" end)
+    return (ok and v) or ""
+end
+
+local ProxyLib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/ProxyHubDev/ProxyLib/refs/heads/main/Documents/ProxyLibrary"
+))()
+local Lib = ProxyLib.new()
+
+local function LoadMainHub()
+    local Window = Lib:CreateWindow({
+        Title    = "FPSs Hub",
+        Subtitle = "FPS Optimization Tool",
+        Theme    = "Purple",
+        Size     = Vector2.new(560, 420),
+        ConfigPanel = {
+            Enabled  = true,
+            Theme    = true,
+            Fps      = true,
+            Ping     = true,
+            Profile  = true,
+        },
+        FloatButton = {
+            Shape = "Circle",
+            Color = "Black",
+            Size  = 50,
+        },
+    })
+
+    Window:Notify({ Title = "🚀 FPSs Hub", Description = "Script berhasil diload!", Duration = 4 })
+
+    -- ============================
+    --   TAB 1 - STATUS
+    -- ============================
+    Window:CreateSeparator({ Text = "INFO" })
+    local Tab1 = Window:CreateTab({ Title = "📊 Status", Icon = "rbxassetid://4483345998" })
+
+    Tab1:CreateSection({ Text = "Server Info" })
+    Tab1:CreateDiscordInvite({ Title = "FPSs Hub Discord", Description = "Join server kami!", Link = "https://discord.gg/TsN6qyWCTv", Button = "Join Discord" })
+
+    local PingLabel   = Tab1:CreateParagraph({ Title = "🌐 Ping", Description = "Loading..." })
+    local PinkLabel   = Tab1:CreateParagraph({ Title = "🌸 Pink Status", Description = "Active" })
+    local FPSLabel    = Tab1:CreateParagraph({ Title = "🎮 FPS", Description = "Loading..." })
+    Tab1:CreateParagraph({ Title = "🖥️ Server ID", Description = tostring(game.JobId) })
+
+    Tab1:CreateSection({ Text = "Player Info" })
+    Tab1:CreateParagraph({ Title = "👤 Username", Description = LocalPlayer.Name })
+    Tab1:CreateParagraph({ Title = "🆔 UserID", Description = tostring(LocalPlayer.UserId) })
+    local ok0, gName = pcall(function() return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name end)
+    Tab1:CreateParagraph({ Title = "🌍 Game", Description = ok0 and gName or tostring(game.PlaceId) })
+
+    local fps, last = 0, tick()
+    RunService.RenderStepped:Connect(function()
+        fps += 1
+        local n = tick()
+        if n - last >= 1 then
+            FPSLabel:SetDescription("🎮 " .. math.floor(fps / (n - last)) .. " FPS")
+            fps, last = 0, n
+        end
+    end)
+    task.spawn(function()
+        while task.wait(2) do
+            local ok2, p = pcall(function() return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+            if ok2 then PingLabel:SetDescription(p .. " ms") end
+        end
+    end)
+
+    -- ============================
+    --   TAB 2 - VISUAL FPS
+    -- ============================
+    Window:CreateSeparator({ Text = "FPS TOOLS" })
+    local Tab2 = Window:CreateTab({ Title = "🎨 Visual FPS", Icon = "rbxassetid://4483345998" })
+    Tab2:CreateSection({ Text = "Graphics Optimization" })
+
+    Tab2:CreateToggle({ Title = "🥔 Potato PC Mode", Description = "Ubah semua material ke Smooth Plastic", Default = false, SaveId = "PotatoMode",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("BasePart") and v then o.Material = Enum.Material.SmoothPlastic end end
+            Window:Notify({ Title = v and "🥔 Potato ON" or "🎨 Normal", Duration = 3 })
+        end })
+
+    Tab2:CreateToggle({ Title = "🚫 Remove Textures", Description = "Hapus semua tekstur & decal di map", Default = false, SaveId = "RemoveTex",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("Texture") or o:IsA("Decal") then o.Transparency = v and 1 or 0 end end
+            Window:Notify({ Title = v and "🚫 Textures OFF" or "🎨 Textures ON", Duration = 3 })
+        end })
+
+    Tab2:CreateToggle({ Title = "🌑 Disable Shadows", Description = "Matikan semua bayangan", Default = false, SaveId = "NoShadow",
+        Callback = function(v)
+            Lighting.GlobalShadows = not v
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("BasePart") then o.CastShadow = not v end end
+            Window:Notify({ Title = v and "🌑 Shadows OFF" or "💡 Shadows ON", Duration = 3 })
+        end })
+
+    Tab2:CreateToggle({ Title = "💧 Clear Water", Description = "Hilangkan refleksi & gelombang air", Default = false, SaveId = "ClearWater",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do
+                if o:IsA("Part") and o.Material == Enum.Material.Water and v then o.Material = Enum.Material.SmoothPlastic; o.Transparency = 0.5 end end
+            Window:Notify({ Title = v and "💧 Water Cleared" or "🌊 Water Normal", Duration = 3 })
+        end })
+
+    Tab2:CreateToggle({ Title = "🗑️ Remove Decals", Description = "Hapus stiker/logo di objek", Default = false, SaveId = "NoDecal",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("Decal") or o:IsA("SurfaceAppearance") then o.Transparency = v and 1 or 0 end end
+            Window:Notify({ Title = v and "🗑️ Decals OFF" or "🖼️ Decals ON", Duration = 3 })
+        end })
+
+    -- ============================
+    --   TAB 3 - NO PARTICLES
+    -- ============================
+    local Tab3 = Window:CreateTab({ Title = "✨ No Particles", Icon = "rbxassetid://4483345998" })
+    Tab3:CreateSection({ Text = "Effects & Particles" })
+
+    Tab3:CreateToggle({ Title = "💥 Disable Skill Effects", Description = "Sembunyikan efek ledakan/jurus", Default = false, SaveId = "NoSkillFX",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do
+                if o:IsA("ParticleEmitter") or o:IsA("Beam") or o:IsA("Trail") or o:IsA("Smoke") or o:IsA("Fire") or o:IsA("Sparkles") then o.Enabled = not v end end
+            Window:Notify({ Title = v and "💥 Effects OFF" or "✨ Effects ON", Duration = 3 })
+        end })
+
+    Tab3:CreateToggle({ Title = "🌫️ Remove Particles", Description = "Hapus asap, api, debu, percikan", Default = false, SaveId = "NoParticle",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do
+                if o:IsA("ParticleEmitter") then o.Enabled = not v; if v then o:Clear() end end
+                if o:IsA("Smoke") or o:IsA("Fire") or o:IsA("Sparkles") then o.Enabled = not v end end
+            Window:Notify({ Title = v and "🌫️ Particles OFF" or "✨ Particles ON", Duration = 3 })
+        end })
+
+    Tab3:CreateToggle({ Title = "〰️ Disable Trails", Description = "Hapus efek garis pergerakan", Default = false, SaveId = "NoTrail",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("Trail") then o.Enabled = not v end end
+            Window:Notify({ Title = v and "〰️ Trails OFF" or "〰️ Trails ON", Duration = 3 })
+        end })
+
+    Tab3:CreateToggle({ Title = "🔦 Disable Beams", Description = "Hapus efek beam & cahaya", Default = false, SaveId = "NoBeam",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do if o:IsA("Beam") then o.Enabled = not v end end
+            Window:Notify({ Title = v and "🔦 Beams OFF" or "🔦 Beams ON", Duration = 3 })
+        end })
+
+    Tab3:CreateToggle({ Title = "🖼️ Disable Post-Processing", Description = "Matikan Bloom, Blur, Sunrays", Default = false, SaveId = "NoPostFX",
+        Callback = function(v)
+            for _, e in ipairs(Lighting:GetChildren()) do
+                if e:IsA("BloomEffect") or e:IsA("BlurEffect") or e:IsA("ColorCorrectionEffect") or e:IsA("SunRaysEffect") or e:IsA("DepthOfFieldEffect") then e.Enabled = not v end end
+            Window:Notify({ Title = v and "🖼️ Post-FX OFF" or "🎨 Post-FX ON", Duration = 3 })
+        end })
+
+    -- ============================
+    --   TAB 4 - FPS PERFORMANCE
+    -- ============================
+    Window:CreateSeparator({ Text = "PERFORMANCE" })
+    local Tab4 = Window:CreateTab({ Title = "⚡ FPS Performance", Icon = "rbxassetid://4483345998" })
+    Tab4:CreateSection({ Text = "Performance & Optimization" })
+
+    Tab4:CreateToggle({ Title = "🔓 FPS Unlocker", Description = "Buka batas 60 FPS → 120/144+", Default = false, SaveId = "FPSUnlock",
+        Callback = function(v)
+            if v then setfpscap(0) else setfpscap(60) end
+            Window:Notify({ Title = v and "🔓 FPS Unlocked!" or "🔒 FPS Locked 60", Duration = 3 })
+        end })
+
+    Tab4:CreateSlider({ Title = "🎯 Custom FPS Cap", Min = 0, Max = 240, Default = 60, SaveId = "FPSCap",
+        Callback = function(v) setfpscap(v) end })
+
+    Tab4:CreateToggle({ Title = "🗺️ Unrender Map", Description = "Hilangkan map (cocok saat AFK farm)", Default = false, SaveId = "UnrenderMap",
+        Callback = function(v)
+            for _, o in ipairs(Workspace:GetDescendants()) do
+                if o:IsA("BasePart") and not o:IsDescendantOf(LocalPlayer.Character or Instance.new("Folder")) then o.LocalTransparencyModifier = v and 1 or 0 end end
+            Window:Notify({ Title = v and "🗺️ Map Hidden" or "🗺️ Map Visible", Duration = 3 })
+        end })
+
+    Tab4:CreateToggle({ Title = "🌫️ Render Distance / Fog", Description = "Batasi jarak pandang agar GPU ringan", Default = false, SaveId = "FogOn",
+        Callback = function(v)
+            Lighting.FogStart = 0; Lighting.FogEnd = v and 300 or 100000
+            if v then Lighting.FogColor = Color3.fromRGB(200,200,200) end
+            Window:Notify({ Title = v and "🌫️ Fog ON" or "👁️ Render Normal", Duration = 3 })
+        end })
+
+    Tab4:CreateSlider({ Title = "📏 Fog Distance", Min = 50, Max = 2000, Default = 300, SaveId = "FogDist",
+        Callback = function(v) Lighting.FogEnd = v end })
+
+    Tab4:CreateButton({ Title = "🧹 Clear Memory", Description = "Bersihkan cache & RAM game",
+        Callback = function()
+            collectgarbage("collect")
+            Window:Notify({ Title = "🧹 Memory Cleared!", Description = "Cache dibersihkan!", Duration = 3 })
+        end })
+
+    local blackGui = nil
+    Tab4:CreateToggle({ Title = "⬛ Black Screen Mode", Description = "Layar hitam, hemat baterai saat AFK", Default = false, SaveId = "BlackScreen",
+        Callback = function(v)
+            if v then
+                blackGui = Instance.new("ScreenGui"); blackGui.Name = "BlackScreen"; blackGui.ResetOnSpawn = false
+                local f = Instance.new("Frame"); f.Size = UDim2.new(1,0,1,0); f.BackgroundColor3 = Color3.fromRGB(0,0,0); f.ZIndex = 1; f.Parent = blackGui
+                blackGui.Parent = CoreGui
+            else if blackGui then blackGui:Destroy(); blackGui = nil end end
+            Window:Notify({ Title = v and "⬛ Black Screen ON" or "💡 Screen Normal", Duration = 3 })
+        end })
+
+    -- ============================
+    --   TAB 5 - UI & PLAYER
+    -- ============================
+    Window:CreateSeparator({ Text = "PLAYER" })
+    local Tab5 = Window:CreateTab({ Title = "👤 UI & Player", Icon = "rbxassetid://4483345998" })
+    Tab5:CreateSection({ Text = "Player Visibility" })
+
+    Tab5:CreateToggle({ Title = "👻 Hide Other Players", Description = "Sembunyikan karakter pemain lain", Default = false, SaveId = "HidePlayers",
+        Callback = function(v)
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character then
+                    for _, part in ipairs(p.Character:GetDescendants()) do
+                        if part:IsA("BasePart") or part:IsA("Decal") then part.LocalTransparencyModifier = v and 1 or 0 end end end end
+            Window:Notify({ Title = v and "👻 Players Hidden" or "👥 Players Visible", Duration = 3 })
+        end })
+
+    Tab5:CreateSection({ Text = "Chat & UI" })
+    Tab5:CreateToggle({ Title = "💬 Disable Chat", Description = "Sembunyikan chat agar tidak stuttering", Default = false, SaveId = "NoChat",
+        Callback = function(v)
+            local cg = LocalPlayer.PlayerGui:FindFirstChild("Chat"); if cg then cg.Enabled = not v end
+            pcall(function() game:GetService("Chat").BubbleChatEnabled = not v end)
+            Window:Notify({ Title = v and "💬 Chat OFF" or "💬 Chat ON", Duration = 3 })
+        end })
+
+    Tab5:CreateSection({ Text = "Info" })
+    Tab5:CreateParagraph({ Title = "FPSs Hub", Description = "Script untuk boost FPS Roblox.\nJoin Discord untuk info & update!" })
+    Tab5:CreateDiscordInvite({ Title = "FPSs Hub Discord", Description = "Join untuk update & support!", Link = "https://discord.gg/TsN6qyWCTv", Button = "Join Discord" })
+end
+
+-- ============================
+--   KEY CHECK
+-- ============================
+local savedKey = LoadKey()
+
+if savedKey == VALID_KEY then
+    LoadMainHub()
+else
+    local KS = Lib:CreateKeySystem({
+        Title = "FPSs Hub - Authentication",
+        Theme = "Purple",
+        Size  = Vector2.new(440, 280),
+    })
+
+    KS:CreateSocialButton({ Type = "Discord", Link = "https://discord.gg/TsN6qyWCTv", Order = 1 })
+
+    KS:CreateButton({
+        Description = "✅ Verify Key",
+        Callback = function()
+            if KS:GetText() == VALID_KEY then
+                SaveKey(KS:GetText())
+                KS:Notify({ Title = "✅ Key Valid!", Description = "Key disimpan. Memuat hub...", Duration = 2 })
+                task.wait(2)
+                KS:Destroy()
+                LoadMainHub()
+            else
+                KS:Notify({ Title = "❌ Key Salah!", Description = "Key tidak valid. Coba lagi.", Duration = 3 })
+            end
+        end
+    })
+end
